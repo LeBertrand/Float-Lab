@@ -141,7 +141,7 @@ char* get_flt_exp_str(float fl)
 */
 int get_flt_exp_val(float fl)
 {
-    int expint = get_flt_bits_int(fl); // sign propogation shouldn't matter
+    int expint = get_flt_bits_int(fl);
     int j, count=0, sum=0;
     //expint = expint & (int) pow(2,8) - 1;
     
