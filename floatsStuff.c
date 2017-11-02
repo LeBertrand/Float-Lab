@@ -47,11 +47,14 @@ typedef struct {
 
 
 Float get_float_val_float(float fl);
+void disp_flt_str(Float fl_s);
+float get_flt_bits_val(Float fl_s);
 
 int main()
 {
-    int i = 0x000000ab;
+    int i = 0x0000290b;
     float x = -15.375, y = *(float*) (&i), z = pow(2,150);
+    float vals[] = {x,y,z};
     
     /*
     printf("Modes are: Normalized %d, Denormalized %d, and Special %d\n", NORM, DNORM, SPEC);
@@ -67,7 +70,24 @@ int main()
     
     // printf("x = %lf, M is %s, M evaluates %lf\n",
     //     x, get_flt_man_str(x), get_flt_man_val(x));
-    printf("x = %lf, bits are %s\n", x, get_flt_bits_str(x));
+    //printf("x = %lf, bits are %s\n", x, get_flt_bits_str(x));
+    
+    float fl, flb;
+    Float flx;
+    int index;
+    for(index = 0; index < 3; index++){
+        fl = vals[index];
+        printf("\nFloat Value: %.20f\n", fl);
+        flx = get_float_val_float(x);
+        disp_flt_str(flx);
+    
+        flb = get_flt_bits_val(flx);
+        printf("Float came back as %lf\n", flb);
+        
+        if(fl != flb){
+            printf("Float corrupted, mismatch of %lf\n", fl-flb);
+        }
+    }
     
     return EXIT_SUCCESS;
     
@@ -171,16 +191,16 @@ int get_flt_exp_val(float fl)
     int j, count=0, sum=0;
     //expint = expint & (int) pow(2,8) - 1;
     
-    //printf("Get E value has string %x, for float %lf\n", expint, fl);
+    printf("Get E value has string %x, for float %lf\n", expint, fl);
     
     for (j=23; j <31; j++){
         
         sum = sum + ( (expint>>j)&1) * pow(2,count);
-        //printf("Reached digit %d, digit is %d, 2^digit = %f, accumulated E = %d\n",
-        //    count, (expint>>j)&1, pow(2,count), sum);
+        printf("Reached digit %d, digit is %d, 2^digit = %f, accumulated E = %d\n",
+            count, (expint>>j)&1, pow(2,count), sum);
         count++;
     }
-    //printf("sum = %d\n", sum);
+    printf("sum = %d\n", sum);
     /* int bit_check = pow(2, 7);
     int index, E = 0;
     for(index = 0; index < 8; index++){
@@ -196,7 +216,7 @@ int get_flt_exp_val(float fl)
     Write a function to return an integer containing the
     mode of the exponent of a float.  You should call
     get_flt_exp_val to get the bits in an int and return
-    the int with the mode value.
+    the int with the mode value. denormalized
     Example:
         for f = -15.375
             n = 11000001011101100000000000000000
@@ -211,15 +231,17 @@ int get_flt_exp_mode(float fl)
     int expint = BIAS + get_flt_exp_val(fl);
     
     // DB-DL
-    //printf("e in function is %x\n", expint);
+    printf("e in function is %x\n", expint);
     
-    //turn first bit to zero
     if(expint == 0){
+        puts("Reached denormalized case");
         return DNORM;
     }
     if(expint == 0xff){
+        puts("Reached special case");
         return SPEC;
     }
+    puts("Reached Normal case");
     return NORM;
 }
 
@@ -338,8 +360,20 @@ char* get_flt_bits_str(float fl)
 Float get_float_val_float(float fl)
 {
     Float fl_s;
+    
+    fl_s.sign = get_flt_sign_val(fl);
+    
+    fl_s.mantissa = get_flt_man_val(fl);
+    fl_s.mode = get_flt_exp_mode(fl);
+    
+    if(fl_s.mode == DNORM){
+        fl_s.exponent = -126;
+    } else {
+        fl_s.exponent = BIAS + get_flt_exp_val(fl);
+    }
+    
+    return fl_s;
 }
-
 
 
 /*
@@ -347,6 +381,27 @@ Float get_float_val_float(float fl)
     It should accept a flt struct and return nothing.
     Hint: Use if statement to print mode.
 */
+
+void disp_flt_str(Float fl_s)
+{
+    char mode_name[13];
+    switch(fl_s.mode){
+        case NORM:
+            strcpy(mode_name, "Normalized");
+            break;
+        case DNORM:
+            strcpy(mode_name, "Denormalized");
+            break;
+        case SPEC:
+            strcpy(mode_name, "Special");
+            break;
+        default:
+            strcpy(mode_name, "Error");
+    }
+    
+    printf("Float Sign: %d\nFloat E: %d\nFloat Mantissa: %lf\nFloat Mode: %s\n",
+        fl_s.sign, fl_s.exponent, fl_s.mantissa, mode_name);
+}
 
 
 
@@ -361,7 +416,23 @@ Float get_float_val_float(float fl)
         Check the slides and text for conditions for NORN, DNORM and SPEC
         You need to return (sign) * M * 2^e
 */
-
+float get_flt_bits_val(Float fl_s)
+{
+    printf("Struct mode in display func is %d\n", fl_s.mode);
+    switch(fl_s.mode){
+        case SPEC:
+            if(fl_s.mantissa == 0) return INFINITY * fl_s.sign;
+            return NAN;
+        case NORM:
+            printf("Reached code for calculating normalized\n");
+            return fl_s.sign * fl_s.mantissa * pow(2, fl_s.exponent - BIAS);
+        case DNORM:
+            return fl_s.sign * fl_s.mantissa * pow(2, 1 - BIAS);
+        default:
+            printf("Error unpacking Float structure.\n");
+            return NAN;
+    }
+}
 
 
 
