@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #define NORM 0
 #define DNORM 1
@@ -14,6 +15,10 @@ char get_flt_sign_char(float);
 int get_flt_sign_val(float);
 char* get_flt_exp_str(float);
 int get_flt_exp_val(float);
+int get_flt_exp_mode(float);
+char* get_flt_man_str(float fl);
+float get_flt_man_val(float fl);
+char* get_flt_bits_str(float fl);
 
 /*
     Declare a "typedef struct {} flt;" to contain data for a float
@@ -33,18 +38,39 @@ int get_flt_exp_val(float);
         mode = NORM
 */
 
-typedef struct flt{
+typedef struct {
     int sign;
     int exponent;
     float mantissa;
     int mode; 
 } Float;
 
+
+Float get_float_val_float(float fl);
+
 int main()
 {
-    int x = -15.375;
-    printf("E = %d\n", get_flt_exp_val(x));
-    get_flt_exp_val(x);
+    int i = 0x000000ab;
+    float x = -15.375, y = *(float*) (&i), z = pow(2,150);
+    
+    /*
+    printf("Modes are: Normalized %d, Denormalized %d, and Special %d\n", NORM, DNORM, SPEC);
+    printf("%lf || E = %s, mode = %d\n", x, get_flt_exp_str(x), get_flt_exp_mode(x));
+    printf("%lf || E = %s, mode = %d\n", y, get_flt_exp_str(y), get_flt_exp_mode(y));
+    printf("%lf || E = %s, mode = %d\n", z, get_flt_exp_str(z), get_flt_exp_mode(z)); */
+    
+    /*
+    printf("%lf || M = %s\n", x, get_flt_man_str(x));
+    printf("%lf || M = %s\n", y, get_flt_man_str(y));
+    printf("%lf || M = %s\n", z, get_flt_man_str(z));
+    */
+    
+    // printf("x = %lf, M is %s, M evaluates %lf\n",
+    //     x, get_flt_man_str(x), get_flt_man_val(x));
+    printf("x = %lf, bits are %s\n", x, get_flt_bits_str(x));
+    
+    return EXIT_SUCCESS;
+    
 }
 
 /*
@@ -145,19 +171,23 @@ int get_flt_exp_val(float fl)
     int j, count=0, sum=0;
     //expint = expint & (int) pow(2,8) - 1;
     
+    //printf("Get E value has string %x, for float %lf\n", expint, fl);
+    
     for (j=23; j <31; j++){
-        printf("%d %.2x\n", (expint>>j)&1, expint);
-        sum = sum + ((expint>>j)&1)*pow(2,count);
+        
+        sum = sum + ( (expint>>j)&1) * pow(2,count);
+        //printf("Reached digit %d, digit is %d, 2^digit = %f, accumulated E = %d\n",
+        //    count, (expint>>j)&1, pow(2,count), sum);
         count++;
     }
-    printf("sum = %d\n", sum);
+    //printf("sum = %d\n", sum);
     /* int bit_check = pow(2, 7);
     int index, E = 0;
     for(index = 0; index < 8; index++){
         
     } */
     
-    return expint;
+    return sum - BIAS;
 }
 
 
@@ -175,6 +205,23 @@ int get_flt_exp_val(float fl)
     The function should accept a float and return an int.
 */
 
+int get_flt_exp_mode(float fl)
+{
+    //get bits
+    int expint = BIAS + get_flt_exp_val(fl);
+    
+    // DB-DL
+    //printf("e in function is %x\n", expint);
+    
+    //turn first bit to zero
+    if(expint == 0){
+        return DNORM;
+    }
+    if(expint == 0xff){
+        return SPEC;
+    }
+    return NORM;
+}
 
 
 
@@ -189,7 +236,26 @@ int get_flt_exp_val(float fl)
             the mantissa bits are "11101100000000000000000"
     The function should accept a float and return a string.
 */
-
+char* get_flt_man_str(float fl)
+{
+    const int len = 23;
+    char *exp_str = malloc(len + 1);
+    exp_str[len] = '\0'; // allow printing with %s
+    unsigned int bit_check = pow(2,(len-1));//1000...Check from second place on
+    unsigned int has_bit;
+    int fl_int = get_flt_bits_int(fl);
+    int index;
+    for(index = 0; index < len; index++){
+        has_bit = bit_check & fl_int;
+        bit_check = bit_check >> 1;
+        if(has_bit){
+            exp_str[index] = '1';
+        } else {
+            exp_str[index] = '0';
+        }
+    }
+    return exp_str;  
+}
 
 
 
@@ -205,7 +271,21 @@ int get_flt_exp_val(float fl)
             the actual value of the mantissa is 0.9218750000
     The function should accept a float and return an int.
 */
-
+float get_flt_man_val(float fl)
+{
+    const len = 23;
+    float place_val = 1, sum = 0;
+    int expint = get_flt_bits_int(fl), index;
+    
+    for(index = len - 1; index >= 0; index--){
+        place_val /= 2; //simulates bit-shift right, past decimal point
+        sum += (((expint >> index) &1 ) * place_val); //much better than pow
+        //TODO: take out all pow and use rolling place-value variable
+        //printf("Working on digit %d, running total %lf\n", index, sum);
+    }
+    
+    return sum;
+}
 
 
 
@@ -226,7 +306,24 @@ int get_flt_exp_val(float fl)
                 separate the 3 parts.
     The function should accept a float and return a string.
 */
-
+char* get_flt_bits_str(float fl)
+{
+    char* bit_str = malloc(35);
+    bit_str[34] = '\0';
+    printf("Buffer Contents: %s\n", bit_str);
+    
+    bit_str[0] = get_flt_sign_char(fl);
+    bit_str[1] = ' ';
+    
+    char *buf = get_flt_exp_str(fl);
+    strcpy(bit_str + 2, buf);
+    bit_str[10] = ' ';
+    
+    buf = get_flt_man_str(fl);
+    strcpy(bit_str + 11, buf);
+    
+    return bit_str;
+}
 
 
 
@@ -238,7 +335,10 @@ int get_flt_exp_val(float fl)
     Hint:  make sure to set exponent to -126 for
     DNORM mode.
 */
-
+Float get_float_val_float(float fl)
+{
+    Float fl_s;
+}
 
 
 
