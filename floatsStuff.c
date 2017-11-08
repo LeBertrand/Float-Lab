@@ -46,52 +46,61 @@ typedef struct {
 } Float;
 
 
-Float get_float_val_float(float fl);
-void disp_flt_str(Float fl_s);
-float get_flt_bits_val(Float fl_s);
+//Float get_float_val_float(float fl);
+// void print_flt(Float fl_s);
+// float get_flt_bits_val(Float fl_s);
 
-int main()
-{
-    int i = 0x0000290b;
-    float x = -15.375, y = *(float*) (&i), z = pow(2,150);
-    float vals[] = {x,y,z};
+
+// int main() for unit testing
+// {
+//     /*
+//     int i = 0x0000290b;
+//     float x = -150.375, y = 1.5, z = .125;
+//     float vals[] = {x,y,z}; */
     
-    /*
-    printf("Modes are: Normalized %d, Denormalized %d, and Special %d\n", NORM, DNORM, SPEC);
-    printf("%lf || E = %s, mode = %d\n", x, get_flt_exp_str(x), get_flt_exp_mode(x));
-    printf("%lf || E = %s, mode = %d\n", y, get_flt_exp_str(y), get_flt_exp_mode(y));
-    printf("%lf || E = %s, mode = %d\n", z, get_flt_exp_str(z), get_flt_exp_mode(z)); */
+//     /*
+//     printf("Modes are: Normalized %d, Denormalized %d, and Special %d\n", NORM, DNORM, SPEC);
+//     printf("%lf || E = %s, mode = %d\n", x, get_flt_exp_str(x), get_flt_exp_mode(x));
+//     printf("%lf || E = %s, mode = %d\n", y, get_flt_exp_str(y), get_flt_exp_mode(y));
+//     printf("%lf || E = %s, mode = %d\n", z, get_flt_exp_str(z), get_flt_exp_mode(z)); 
+//     */
     
-    /*
-    printf("%lf || M = %s\n", x, get_flt_man_str(x));
-    printf("%lf || M = %s\n", y, get_flt_man_str(y));
-    printf("%lf || M = %s\n", z, get_flt_man_str(z));
-    */
+//     /*
+//     printf("%lf || M = %s\n", x, get_flt_man_str(x));
+//     printf("%lf || M = %s\n", y, get_flt_man_str(y));
+//     printf("%lf || M = %s\n", z, get_flt_man_str(z));
+//     */
     
-    // printf("x = %lf, M is %s, M evaluates %lf\n",
-    //     x, get_flt_man_str(x), get_flt_man_val(x));
-    //printf("x = %lf, bits are %s\n", x, get_flt_bits_str(x));
+//     // printf("x = %lf, M is %s, M evaluates %lf\n",
+//     //     x, get_flt_man_str(x), get_flt_man_val(x));
+//     //printf("x = %lf, bits are %s\n", x, get_flt_bits_str(x));
     
-    float fl, flb;
-    Float flx;
-    int index;
-    for(index = 0; index < 3; index++){
-        fl = vals[index];
-        printf("\nFloat Value: %.20f\n", fl);
-        flx = get_float_val_float(x);
-        disp_flt_str(flx);
+//     float fl, flb;
+//     Float flx;
+//     float testVals[] = {
+//         -15.375, 0xAFFF99, -0xAFFF99, .5, -1 * .5 * .1,
+//         (.5 * .5 * .5 * 1 + 1/3), (-1 * 3.0007 * .5 * .5 * .5 * .5 * .5 * .5 ),
+//         1.3, -1.3, sqrt(-1), INFINITY
+//         };
+//     int index;
+//     for(index = 0; index < 11; index++){
+//         fl = testVals[index];
+//         printf("\nFloat Value: %.20f\n", fl);
+//         flx = get_float_val_float(fl);
+//         print_flt(flx);
     
-        flb = get_flt_bits_val(flx);
-        printf("Float came back as %lf\n", flb);
+//         flb = get_flt_bits_val(flx);
+//         printf("Float came back as %lf\n", flb);
         
-        if(fl != flb){
-            printf("Float corrupted, mismatch of %lf\n", fl-flb);
-        }
-    }
+//         if(fl != flb && (fl == NAN) != (flb == NAN)){
+//             printf("Float corrupted, mismatch of %lf\n", fl-flb);
+//         }
+//     } 
     
-    return EXIT_SUCCESS;
+//     return EXIT_SUCCESS;
     
-}
+// }
+
 
 /*
     Write a function get_flt_bits_int to return an integer with the
@@ -187,25 +196,29 @@ char* get_flt_exp_str(float fl)
 */
 int get_flt_exp_val(float fl)
 {
+    
+    //fl = 15.375;
     int expint = get_flt_bits_int(fl);
     int j, count=0, sum=0;
     //expint = expint & (int) pow(2,8) - 1;
     
-    printf("Get E value has string %x, for float %lf\n", expint, fl);
+    //printf("Get E value has string %x, for float %lf\n", expint, fl);
     
     for (j=23; j <31; j++){
         
         sum = sum + ( (expint>>j)&1) * pow(2,count);
-        printf("Reached digit %d, digit is %d, 2^digit = %f, accumulated E = %d\n",
-            count, (expint>>j)&1, pow(2,count), sum);
+        // printf("Reached digit %d, digit is %d, 2^digit = %f, accumulated E = %d\n",
+        //     count, (expint>>j)&1, pow(2,count), sum);
         count++;
     }
-    printf("sum = %d\n", sum);
+    //printf("e = %d\n", sum);
     /* int bit_check = pow(2, 7);
     int index, E = 0;
     for(index = 0; index < 8; index++){
         
     } */
+    
+    
     
     return sum - BIAS;
 }
@@ -230,18 +243,25 @@ int get_flt_exp_mode(float fl)
     //get bits
     int expint = BIAS + get_flt_exp_val(fl);
     
+    printf("%d\n", expint);
+    //exit(0);
+    
+    //int bits = get_flt_bits_int(fl);
+    //printf("Got bit string %x\n", bits);
+    
     // DB-DL
-    printf("e in function is %x\n", expint);
+    //printf("e in function is %d\n", expint);
+   // exit(0);
     
     if(expint == 0){
-        puts("Reached denormalized case");
+        // puts("Reached denormalized case");
         return DNORM;
     }
     if(expint == 0xff){
-        puts("Reached special case");
+        // puts("Reached special case");
         return SPEC;
     }
-    puts("Reached Normal case");
+    // puts("Reached Normal case");
     return NORM;
 }
 
@@ -299,9 +319,13 @@ float get_flt_man_val(float fl)
     float place_val = 1, sum = 0;
     int expint = get_flt_bits_int(fl), index;
     
+    //printf("Finding Mantissa in %x\n", expint);
+    
     for(index = len - 1; index >= 0; index--){
         place_val /= 2; //simulates bit-shift right, past decimal point
         sum += (((expint >> index) &1 ) * place_val); //much better than pow
+        
+        //printf("Reached digit %d, %d. Accumulated %lf.\n", len - index, (expint >> index) & 1, sum);
         //TODO: take out all pow and use rolling place-value variable
         //printf("Working on digit %d, running total %lf\n", index, sum);
     }
@@ -332,7 +356,7 @@ char* get_flt_bits_str(float fl)
 {
     char* bit_str = malloc(35);
     bit_str[34] = '\0';
-    printf("Buffer Contents: %s\n", bit_str);
+    //printf("Buffer Contents: %s\n", bit_str);
     
     bit_str[0] = get_flt_sign_char(fl);
     bit_str[1] = ' ';
@@ -382,7 +406,7 @@ Float get_float_val_float(float fl)
     Hint: Use if statement to print mode.
 */
 
-void disp_flt_str(Float fl_s)
+void print_flt(Float fl_s)
 {
     char mode_name[13];
     switch(fl_s.mode){
@@ -399,8 +423,8 @@ void disp_flt_str(Float fl_s)
             strcpy(mode_name, "Error");
     }
     
-    printf("Float Sign: %d\nFloat E: %d\nFloat Mantissa: %lf\nFloat Mode: %s\n",
-        fl_s.sign, fl_s.exponent, fl_s.mantissa, mode_name);
+    // printf("Float Sign: %d\nFloat E: %d\nFloat Mantissa: %lf\nFloat Mode: %s\n",
+    //     fl_s.sign, fl_s.exponent, fl_s.mantissa, mode_name);
 }
 
 
@@ -418,20 +442,42 @@ void disp_flt_str(Float fl_s)
 */
 float get_flt_bits_val(Float fl_s)
 {
-    printf("Struct mode in display func is %d\n", fl_s.mode);
+    
+    // printf("Struct mode in display func is %d\n", fl_s.mode);
     switch(fl_s.mode){
         case SPEC:
             if(fl_s.mantissa == 0) return INFINITY * fl_s.sign;
             return NAN;
         case NORM:
-            printf("Reached code for calculating normalized\n");
-            return fl_s.sign * fl_s.mantissa * pow(2, fl_s.exponent - BIAS);
+            // printf("Reached code for calculating normalized\n");
+            // printf("mantissa %f exponent %d   %f\n", fl_s.mantissa, fl_s.exponent - BIAS,  fl_s.sign * (1+fl_s.mantissa) * pow(2, fl_s.exponent - BIAS));
+            //exit(0);
+            return fl_s.sign * (1+fl_s.mantissa) * pow(2, fl_s.exponent - BIAS);
         case DNORM:
-            return fl_s.sign * fl_s.mantissa * pow(2, 1 - BIAS);
+            return fl_s.sign * fl_s.mantissa; // * pow(2, fl_s.exponent - BIAS);
         default:
             printf("Error unpacking Float structure.\n");
             return NAN;
+        
     }
+    
+    /*
+    int flo = 0;
+    if(fl_s.sign < 0){
+        flo = -0.0;
+    }
+    
+    flo = flo | (fl_s.exponent << 22);
+    
+    float flint = * (float*) &flo;
+    flint = flint | fl_s.mantissa;
+    // int index;
+    // for(index = 0; index < 8; index++){
+    //     if((fl_s.exp >> index)  & 1){
+    //         flo = flo | (1 << 30 - index);
+    //     }
+    // }
+    return flint; */
 }
 
 
@@ -453,13 +499,33 @@ float get_flt_bits_val(Float fl_s)
     get_flt_val_flt
     print_flt
 
-    get_flt_bits_val
+    get_flt_bits_val */
 
 int main(){
+    float fl = -15.375;
+    
+    printf("Float value = %lf\n", fl);
+    printf("Float bit is %c\n", get_flt_sign_char(fl));
+    printf("Float sign = %d\n", get_flt_sign_val(fl));
 
+    printf("Float E bit string is %s\n", get_flt_exp_str(fl));
+    printf("Float E = %d\n", get_flt_exp_val(fl));
 
+    printf("Float mantissa bit string is %s\n", get_flt_man_str(fl));
+    printf("Float M = %lf\n", get_flt_man_val(fl));
 
+    printf("Float bit representation is %s\n", get_flt_bits_str(fl));
+
+    Float flst;
+    
+    // flst.sign = -1;
+    // flst.exponent = 5;
+    // flst.mantissa = 1.444;
+    // printf("manual float contains %d %d %lf\n", flst.sign, flst.exponent,flst.mantissa);
+    flst = get_float_val_float(fl);
+    print_flt(flst);
+
+    get_flt_bits_val(flst); 
 
     return 0;
 }
-*/
